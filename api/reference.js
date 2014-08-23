@@ -25,6 +25,8 @@ javascripture.api.reference = {
 		//add the previous chapter if it exists
 		if ( prev.book ) {
 			result.chapters.push( javascripture.api.reference.getChapterData( prev ) );
+		} else {
+			result.chapters.push( '' );
 		}
 
 		result.chapters.push( javascripture.api.reference.getChapterData( reference ) );
@@ -32,6 +34,8 @@ javascripture.api.reference = {
 		//add the next chapter if it exists
 		if ( next.book ) {
 			result.chapters.push( javascripture.api.reference.getChapterData( next ) );
+		} else {
+			result.chapters.push( '' );
 		}
 		return result;
 	},
@@ -60,8 +64,8 @@ javascripture.api.reference = {
 		var book = reference.book,
 		    chapter = reference.chapter,
 		    offsetChapter = {
-		    	leftVersion: reference.leftVersion,
-		    	rightVersion: reference.rightVersion
+				leftVersion: reference.leftVersion,
+				rightVersion: reference.rightVersion
 		    },
 			offsetChapterNumber = parseInt(chapter, 10) + offset,
 			offsetNumberJavascript = offsetChapterNumber - 1,

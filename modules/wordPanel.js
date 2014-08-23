@@ -95,7 +95,7 @@
 					infoObjects[ i ].find('#wordTreeBranches').html( wordTreeBranches );
 
 					var family = javascripture.api.word.getFamily( strongsNumber ),
-					    familyInt = parseFloat( family.substring( 1, family.length ), 10 ),
+//					    familyInt = parseFloat( family.substring( 1, family.length ), 10 ),
 					    wordTreeFamily = 'family: ' + family;
 					infoObjects[ i ].find('#wordTreeFamily').html( wordTreeFamily );
 
@@ -148,12 +148,18 @@
 		}
 	};
 
-	/*Word panel*/
+	// Word panel
 	$(document).on( 'click', '#verse ol > li span', function ( event ) {
 		event.preventDefault();
 		event.stopPropagation();
 		javascripture.modules.wordPanel.init( $( this ) );
 	});
+
+	$( document ).on( 'wordPanel', function( event, options ) {
+		console.log( event );
+		console.log( options );
+	} );
+
 
 	$(document).on( 'click', '.wordControlPanel .close', function ( event ) {
 		event.preventDefault();

@@ -423,6 +423,17 @@
 
 </body>
 
+<script type="text/template" id="reference-template">
+	<div class="three-references"
+		<% if ( prev ) { %>
+			data-prev="<%- JSON.stringify( prev ) %>"
+		<% } %>
+		<% if ( next ) { %>
+			data-next="<%- JSON.stringify( next ) %>"
+		<% } %>
+	></div>
+</script>
+
 <script type="text/template" id="chapter-template">
 	<div class="reference frequencyAnalysis" data-book="<%= book %>" data-chapter="<%= chapter %>">
 		<h1><%= book %> <%= chapter %></h1>
@@ -433,7 +444,7 @@
 </script>
 
 <script type="text/template" id="verse-template">
-	<li id="<%= verseId %>" class="<%= className %>" data-verse="<%= verseNumber %>">
+	<li id="<%= reference.book.replace( / /gi, '_' ) + '_' + reference.chapter + '_' + ( reference.verse + 1 ) %>" class="<%= className %>" data-verse="<%= reference.verse %>">
 		<div class="wrapper" id="<%= wrapperId %>">
 			<div class="english">
 				<%= rightString %>
@@ -446,17 +457,17 @@
 </script>
 
 <script type="text/template" id="word-template">
-	<span <% if ( className ) { %>
-		class="<%= className %>"
+	<span <% if ( '' !== lemma ) { %>
+		class="<%= families.join( ' ' ) + '-family' %> <%= lemma %>"
 	    title="<%= lemma %> <%= morph %>"
 	    data-word="<%= word %>"
 	    data-lemma="<%= lemma %>"
-	    data-language="<%= testament %>"
-	    data-range="<%= range %>"
+	    data-language="<%= language %>"
+	    data-range="verse"
 	    data-family="<%= families %>"
 	    data-morph="<%= morph %>"
 	<% } %>
-	><%= wordDisplay %></span>
+	><%= word %></span>
 </script>
 
 <script>

@@ -1,3 +1,4 @@
+/*global importScripts*/
 var javascripture = {};
 javascripture.data = {};
 javascripture.data.kjv = {};

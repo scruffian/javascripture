@@ -1,70 +1,186 @@
-/*globals Backbone javascripture, bible, worker, _ */
+/*globals Backbone javascripture bible worker _ */
+/*Backbone.ajax = function() {
+	return
+}
+Backbone.sync = function() {
+	return
+}*/
 
-var WordModel = Backbone.Model.extend( {
 
+var ReferenceModel = Backbone.Model.extend( { } );
+
+var ReferenceView = Backbone.View.extend({
+	el: '#verse',
+
+	template: _.template( $("#reference-template").html() ),
+
+	initialize: function() {
+		this.collection = new ChapterCollection( this.model.get( 'chapters' ), {
+			prev: this.model.attributes.prev,
+			next: this.model.attributes.next,
+			testament: this.model.attributes.testament,
+			reference: this.model.attributes.reference
+		} );
+//		this.listenTo( this.collection, 'reset', this.render );
+		this.render();
+	},
+
+	render: function() {
+		var $reference = $( this.template( this.model.attributes ) );
+		var chapters = this.collection.getChapters();
+		_.each( chapters, function( chapter ) {
+			$reference.append( chapter );
+		} );
+		this.$el.html( $reference );
+	}
+
+});
+
+var ChapterModel = Backbone.Model.extend( { } );
+
+var ChapterCollection = Backbone.Collection.extend( {
+
+	model: ChapterModel,
+
+	initialize: function( models, options ) {
+		this.prev = options.prev;
+		this.next = options.next;
+		this.testament = options.testament;
+		this.reference=  options.reference;
+	},
+
+	getChapters: function() {
+		var chapters = [];
+		if ( this.prev ) {
+			chapters.push( javascripture.modules.reference.getChapterText( this.prev, this.models[0].attributes, this.testament ) );
+			chapters.push( javascripture.modules.reference.getChapterText( this.reference, this.models[1].attributes, this.testament ) );
+			if (  this.next ) {
+				chapters.push( javascripture.modules.reference.getChapterText( this.next, this.models[2].attributes, this.testament ) );
+			}
+		} else {
+			chapters.push( javascripture.modules.reference.getChapterText( this.reference, this.models[0].attributes, this.testament ) );
+			if ( this.next ) {
+				chapters.push( javascripture.modules.reference.getChapterText( this.next, this.models[1].attributes, this.testament ) );
+			}
+		}
+		return chapters;
+	}
+
+/*	fetch: function( options ) {
+		console.log(this);
+		console.log( options );
+		// Send data to our worker.
+		worker.postMessage( {
+			task: 'reference',
+			parameters: reference
+		} );
+	}*/
 } );
 
+var ChapterView = Backbone.View.extend({
+
+	template: _.template( $("#chapter-template").html() ),
+
+	render: function() {
+		return this.$el.html( this.template( this.model.attributes ) );
+	},
+
+	events: {
+		'click' : 'clickChapter'
+	},
+
+	clickChapter: function() {
+		//anything?
+	}
+
+});
+
+var VerseModel = Backbone.Model.extend({});
+
+var VerseView = Backbone.View.extend({
+
+	tagName: "li",
+
+	template: _.template( $("#verse-template").html() ),
+
+	events: {
+		'click' : 'clickVerse'
+	},
+
+/*	initialize: function() {
+		this.collection = new WordCollection();
+		this.listenTo( this.collection, 'add', this.render )
+	},*/
+
+	clickVerse: function() {
+		alert( 'click verse' );
+	},
+
+	render: function() {
+		//this.collection.fetch();
+		return this.template( this.model.attributes );
+	}
+
+});
+
+var WordModel = Backbone.Model.extend( {
+	defaults: {
+		word: '',
+		lemma: '',
+		morph: ''
+	},
+	initialize: function() {
+		this.setFamilies();
+		this.setLiteralTranslation();
+	},
+	setFamilies: function() {
+		var families = [];
+		this.get( 'lemma' ).split( ' ' ).forEach( function( lemmaValue ) {
+			families.push( javascripture.api.word.getFamily( lemmaValue ) );
+		} );
+		this.set( 'families', families );
+	},
+	setLiteralTranslation: function() {
+		//this.set( 'word', javascripture.modules.translateLiterally.getWord( this ) );
+	}
+} );
+
+var WordCollection = Backbone.Collection.extend( {
+	model: WordModel,
+	initialize: function( reference ) {
+		this.book = reference.book;
+		this.chapter = reference.chapter;
+		this.verse = reference.verse;
+	},
+	url: function() {
+		return this.book + ':' + this.chapter + ':' + this.verse;
+	}
+} );
 
 var WordView = Backbone.View.extend({
 
-	model: WordModel,
-
-	tagName: "span",
+	events: {
+		'click' : 'clickWord'
+	},
 
 	template: _.template( $("#word-template").html() ),
 
-	render: function( wordArray, language, testament, version ) {
-		var self = this,
-		    wordString = '',
-		    families = [];
+	render: function() {
+		return this.template( this.model.attributes );
+	},
 
-		lemma = wordArray[ 1 ];
-		if ( lemma ) {
-			lemmaArray = lemma.split( ' ' );
-			lemmaArray.forEach( function( lemmaValue, key ) {
-				families.push( javascripture.api.word.getFamily( lemmaValue ) );
-			} );
-		}
-		wordDisplay = wordArray[0];
-		if ( version === 'lc' && language === 'english' ) {
-			wordDisplay += javascripture.modules.translateLiterally.getWord( wordArray );
-		}
-
-		var familyClass = '',
-		    className = '';
-		if ( families.length > 0 ) {
-			familyClass = families.join( ' ' ) + '-family';
-			className += families.join( ' ' ) + '-family';
-		}
-		if ( lemma ) {
-			className += ' ' + lemma;
-		}
-
-		return this.template( {
-			className: className,
-			families: familyClass,
-			lemma: lemma,
-			morph: wordArray[2],
-			word: wordArray[0],
-			wordDisplay: wordDisplay,
-			testament: testament,
-			range: 'verse'
-		} );
+	clickWord: function() {
+		alert('click');
+		$( document ).trigger( 'wordPanel', this.model );
 	}
 
 });
 
 javascripture.modules.reference = {
-	wordTemplate: _.template( $("#word-template").html() ),
-	verseTemplate: _.template( $("#verse-template").html() ),
-	chapterTemplate: _.template( $("#chapter-template").html() ),
 	load: function( reference ) {
-		var self = this,
-		    book = reference.book,
-		    chapter = reference.chapter,
-		    verse = reference.verse;
+		var self = this;
 
-		if ( 'undefined' == typeof verse ) {
+		if ( 'undefined' == typeof reference.verse ) {
 			reference.verse = 1;
 		}
 
@@ -87,7 +203,7 @@ javascripture.modules.reference = {
 		worker.postMessage( {
 			task: 'reference',
 			parameters: reference
-		} ); // Send data to our worker.
+		} );
 
 		return this; //makes it chainable
 
@@ -212,12 +328,15 @@ javascripture.modules.reference = {
 				verses += self.getVerseString( reference, chapterData, verseText, verseNumber, verseInArray, testament );
 			});
 		}
-
-		return this.chapterTemplate( {
+		var chapterModel = new ChapterModel( {
 			book: book,
 			chapter: chapter,
 			verses: verses
 		} );
+		var chapterView = new ChapterView( {
+			model: chapterModel
+		} );
+		return chapterView.render();
 
 	},
 	getVerseString: function( reference, chapterData, verseText, verseNumber, verseInArray, testament ) {
@@ -237,22 +356,13 @@ javascripture.modules.reference = {
 			wrapperId = 'context';
 			context = true;
 		}
-		if ( reference.rightVersion === 'lc' ) {
-			//same as below
-			chapterData.left[verseNumber].forEach( function( wordObject, wordNumber ) {
-				if ( wordObject ) {
-					rightString += self.createWordString( wordObject, 'english', testament, reference.rightVersion );
-				}
-			});
-		} else {
-			chapterData.right[verseNumber].forEach( function( wordObject, wordNumber ) {
-				if ( wordObject ) {
-					rightString += self.createWordString( wordObject, 'english', testament, reference.rightVersion );
-				}
-			});
-		}
+		chapterData.right[verseNumber].forEach( function( wordObject, wordNumber ) {
+			if ( wordObject ) {
+				rightString += self.createWordString( wordObject, 'english', testament, reference.rightVersion );
+			}
+		});
 
-		//Load hebrew
+		//Load original
 		if(	chapterData.left[verseNumber] ) {
 			chapterData.left[verseNumber].forEach( function( wordObject, wordNumber ) {
 				if ( wordObject ) {
@@ -260,27 +370,62 @@ javascripture.modules.reference = {
 				}
 			});
 		}
-
-		return this.verseTemplate( {
-			verseId: reference.book.replace( / /gi, '_' ) + '_' + reference.chapter + '_' + ( verseNumber + 1 ),
+		reference.verse = verseNumber;
+		var verse = new VerseModel( {
+			reference: reference,
 			wrapperId: wrapperId,
 			className: className,
-			verseNumber: verseNumber,
 			rightString: rightString,
 			testament: testament,
 			leftString: leftString
 		} );
+		var verseView = new VerseView( {
+			model: verse
+		} );
+		return verseView.render();
+
 	},
 	createWordString: function ( wordArray, language, testament, version ) {
 		var word = new WordModel( {
 			word: wordArray[0],
-			lemma: wordArray[ 1 ],
-			morph: wordArray[2]
+			lemma: wordArray[1],
+			morph: wordArray[2],
+			language: testament
 		} );
 		var wordView = new WordView( {
 			model: word
 		} );
-		return wordView.render( wordArray, language, testament, version );
+		return wordView.render();
+	},
+
+	createPageTitle: function( reference ) {
+		var title = reference.book;
+		if ( typeof reference.chapter !== 'undefined' ) {
+			title += ' ' + reference.chapter;
+		}
+
+		if ( typeof reference.verse !== 'undefined' ) {
+			title += ':' + reference.verse;
+		}
+		return title;
+	},
+
+	getReferencesText: function( result ) {
+		// This is a bit messy
+		var chapters = '';
+		if ( result.prev ) {
+			chapters += javascripture.modules.reference.getChapterText( result.prev, result.chapters[0], result.testament );
+			chapters += javascripture.modules.reference.getChapterText( result.reference, result.chapters[1], result.testament );
+			if ( result.next ) {
+				chapters += javascripture.modules.reference.getChapterText( result.next, result.chapters[2], result.testament );
+			}
+		} else {
+			chapters += javascripture.modules.reference.getChapterText( result.reference, result.chapters[0], result.testament );
+			if ( result.next ) {
+				chapters += javascripture.modules.reference.getChapterText( result.next, result.chapters[1], result.testament );
+			}
+		}
+		return chapters;
 	}
 };
 
@@ -345,46 +490,17 @@ javascripture.modules.reference = {
 
 	worker.addEventListener('message', function(e) {
 		if( e.data.task === 'reference' ) {
+
 			var reference = e.data.result.reference;
 
-			var chapterText = '<div class="three-references"';
+//			var chapterText = javascripture.modules.reference.getReferencesText( e.data.result ),
+//				references = e.data.result;
+//			references.chapters = chapterText;
+			var referenceView = new ReferenceView( {
+				model: new ReferenceModel( e.data.result )
+			} );
 
-			if ( e.data.result.prev ) {
-				chapterText += ' data-prev=\'' + JSON.stringify( e.data.result.prev ) + '\'';
-			}
-			if ( e.data.result.next ) {
-				chapterText += ' data-next=\'' + JSON.stringify( e.data.result.next ) + '\'';
-			}
-			chapterText += '>';
-
-			// This is a bit messy
-			if ( e.data.result.prev ) {
-				chapterText += javascripture.modules.reference.getChapterText( e.data.result.prev, e.data.result.chapters[0], e.data.result.testament );
-				chapterText += javascripture.modules.reference.getChapterText( reference, e.data.result.chapters[1], e.data.result.testament );
-				if ( e.data.result.next ) {
-					chapterText += javascripture.modules.reference.getChapterText( e.data.result.next, e.data.result.chapters[2], e.data.result.testament );
-				}
-			} else {
-				chapterText += javascripture.modules.reference.getChapterText( reference, e.data.result.chapters[0], e.data.result.testament );
-				if ( e.data.result.next ) {
-					chapterText += javascripture.modules.reference.getChapterText( e.data.result.next, e.data.result.chapters[1], e.data.result.testament );
-				}
-			}
-
-			chapterText += '</div>';
-
-			$('#verse').html( chapterText );
-
-			var title = reference.book;
-			if ( typeof reference.chapter !== 'undefined' ) {
-				title += ' ' + reference.chapter;
-			}
-
-			if ( typeof reference.verse !== 'undefined' ) {
-				title += ':' + reference.verse;
-			}
-
-			$( 'head title' ).text( title );
+			$( 'head title' ).text( javascripture.modules.reference.createPageTitle( reference ) );
 
 			if ( $.fn.waypoint ) {
 				$('.reference').waypoint('destroy');
