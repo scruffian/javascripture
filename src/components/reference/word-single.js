@@ -6,6 +6,7 @@ import withStyles from 'isomorphic-style-loader/lib/withStyles';
 // Internal
 import morphology from '../../lib/morphology';
 import styles from './styles.scss';
+import { getFamily } from '../../lib/word';
 
 const getByLemmaAndMorph = function( lemma, morph ) {
 	if ( 'undefined' !== typeof lemma && 'undefined' !== typeof javascripture.data.literalConsistent[ lemma ] ) {
@@ -78,16 +79,22 @@ class WordSingle extends React.Component {
 	};
 
 	getClassName = () => {
-		const { lemma } = this.props;
+		const { lemma, settings } = this.props;
+
+		let strongsNumber = null;
+		if ( settings.highlightWordsWith === 'family' ) {
+			strongsNumber = getFamily( lemma );
+		}
+
 		if ( lemma === 'added' ) {
-			return classnames( lemma );
+			return classnames( strongsNumber );
 		}
 
 		if( this.props.searchSelect ) {
-			return classnames( lemma, styles.selectSingle );
+			return classnames( strongsNumber, lemma, styles.selectSingle );
 		}
 
-		return classnames( lemma, styles.single );
+		return classnames( strongsNumber, lemma, styles.single );
 	};
 
 	render() {

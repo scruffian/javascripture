@@ -14,6 +14,7 @@ const mapStateToProps = ( state, ownProps ) => {
 	return {
 		highlighted: state.wordHighlight,
 		searchSelect: state.searchSelect,
+		settings: state.settings,
 	}
 };
 

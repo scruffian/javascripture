@@ -53,7 +53,7 @@ class WordBlock extends React.Component {
 	}
 
 	getClassName( rootNumber ) {
-		return getFamily( rootNumber ) + '-family ' + rootNumber + ' word-tree';
+		return getFamily( rootNumber ) + ' ' + rootNumber + ' word-tree';
 	}
 
 	getRoots() {
@@ -153,7 +153,7 @@ class WordBlock extends React.Component {
 		if ( wordDetail ) {
 			return (
 				<div>
-					<style>{ getHighlight( strongsNumber, this.props.settings.subdue, this.props.settings.highlightWordsWith ) }</style>
+					<style>{ getHighlight( strongsNumber, this.props.settings.subdue, false ) }</style>
 					<h2
 						className={ this.getClassName( strongsNumber ) + ' ' + styles.title }
 						onClick={ () => this.toggleDetails( false ) }

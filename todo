@@ -8,6 +8,9 @@
 - gaps between words like there in
 - add to home screen
 
+found a non-existent verse 
+Object { book: "Isaiah", chapter: 32, verse: 19 }
+
 
 
 - creating a new literal consistent translation
